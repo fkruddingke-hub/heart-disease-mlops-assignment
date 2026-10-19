@@ -1,0 +1,93 @@
+name: heart-disease-mlops-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-train-containerize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+          python -m pip install --no-deps -e .
+
+      - name: Lint source
+        run: python -m ruff check .
+
+      - name: Run tests
+        run: python -m pytest --junitxml=outputs/test-results.xml
+
+      - name: Download and validate data
+        run: python scripts/download_data.py
+
+      - name: Generate EDA artifacts
+        env:
+          MPLCONFIGDIR: /tmp/matplotlib
+        run: python scripts/run_eda.py
+
+      - name: Train and track candidates
+        env:
+          MPLCONFIGDIR: /tmp/matplotlib
+        run: python -m heart_disease_mlops.train
+
+      - name: Generate assignment report
+        run: python scripts/generate_report.py
+
+      - name: Build serving image
+        run: docker build -t heart-disease-api:${{ github.sha }} .
+
+      - name: Smoke-test serving image
+        run: |
+          docker run -d --name heart-api -p 8000:8000 heart-disease-api:${{ github.sha }}
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              break
+            fi
+            sleep 2
+          done
+          curl --fail --silent --show-error \
+            -X POST http://127.0.0.1:8000/predict \
+            -H 'Content-Type: application/json' \
+            --data @examples/sample_request.json \
+            | tee outputs/container-prediction.json
+
+      - name: Capture container logs
+        if: always()
+        run: docker logs heart-api > outputs/container.log 2>&1 || true
+
+      - name: Stop smoke-test container
+        if: always()
+        run: docker rm -f heart-api || true
+
+      - name: Upload workflow evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: heart-disease-mlops-evidence-${{ github.run_number }}
+          path: |
+            outputs/
+            models/model_metadata.json
+            reports/Assignment_01_Report.docx
+          if-no-files-found: warn
+          retention-days: 30
+

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: heart-disease-api
+  namespace: heart-disease
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: heart-disease.local
+      http:
+        paths:
+          - path: /heart(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: heart-disease-api
+                port:
+                  number: 80

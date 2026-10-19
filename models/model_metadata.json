@@ -1,0 +1,37 @@
+{
+  "project": "heart-disease-mlops",
+  "model_version": "1.0.0",
+  "selection_metric": "test_roc_auc",
+  "selected_candidate": "logistic_c_1",
+  "selected_run_id": "766867d082e645519f1c9c12d39c8cff",
+  "metrics": {
+    "cv_accuracy_mean": 0.8471088435374149,
+    "cv_precision_mean": 0.8767529146045769,
+    "cv_recall_mean": 0.783399209486166,
+    "cv_roc_auc_mean": 0.9024931590148981,
+    "cv_roc_auc_std": 0.01443995119614911,
+    "test_accuracy": 0.8852459016393442,
+    "test_precision": 0.8387096774193549,
+    "test_recall": 0.9285714285714286,
+    "test_roc_auc": 0.9664502164502166
+  },
+  "feature_order": [
+    "age",
+    "sex",
+    "cp",
+    "trestbps",
+    "chol",
+    "fbs",
+    "restecg",
+    "thalach",
+    "exang",
+    "oldpeak",
+    "slope",
+    "ca",
+    "thal"
+  ],
+  "dataset_rows": 303,
+  "train_rows": 242,
+  "test_rows": 61,
+  "random_state": 42
+}

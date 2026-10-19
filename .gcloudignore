@@ -1,0 +1,19 @@
+# Include trained models when a future cloud rebuild is intentionally requested.
+.git/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+mlflow.db*
+mlruns/
+mlartifacts/
+outputs/
+screenshots/
+video/
+.env
+.env.*
+*.pem
+*.key
+*.zip
